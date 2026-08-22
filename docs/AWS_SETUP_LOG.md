@@ -216,15 +216,58 @@ instead of a text editor.
 
 
 
-\## What's next
+edit:
+## 7. Terraform bootstrap completed
 
+**What happened:** Terraform v1.15.9 was installed and initialized in
+`terraform/bootstrap/`. The AWS provider (hashicorp/aws v5.100.0) was
+downloaded and pinned via `.terraform.lock.hcl`.
 
+**Why:** The bootstrap config exists to create the S3 bucket that will hold
+Terraform's own remote state for the rest of the project — this can't live
+in the remote backend it's creating, so it starts as local state.
 
-Terraform itself hasn't been run yet. Next actual step: `terraform init`
+**Problem:** Running `terraform plan` failed with "No valid credential
+sources found." Investigation showed the AWS CLI session (via `aws login`)
+had expired. After re-authenticating, a second issue appeared: `aws login`
+refused to reinitialize the `default` profile because it was already
+configured with `credential_process` credentials, causing a login loop.
 
-\+ `terraform plan` on the `bootstrap/` config (see `../terraform/README.md`),
+**Solution:** Split authentication into two profiles:
+- `ascos-login` — the profile refreshed daily via `aws login --profile ascos-login`,
+  holding the real temporary session credentials.
+- `ascos-terraform` — a profile whose `credential_process` reads from
+  `ascos-login`, dedicated to Terraform's use.
 
-reviewed before any `apply`.
+The `provider "aws"` block in `main.tf` was updated to explicitly set
+`profile = "ascos-terraform"`, so Terraform never depends on the `default`
+profile.
 
+**Verification:**
+- `terraform plan` (before the fix) showed 5 resources to create, 0 changes,
+  0 destroys — confirming the config itself was correct once auth worked.
+- `terraform apply` completed successfully: **5 resources created** (S3
+  bucket, versioning, server-side encryption, public access block, TLS-only
+  bucket policy).
+- A follow-up `terraform plan` (after the profile fix) returned:
+  **"No changes. Your infrastructure matches the configuration."** —
+  confirming the `ascos-terraform` profile chain works end-to-end.
 
+**Result — real AWS resources now exist:**
+- `state_bucket_name` = `ascos-dev-tfstate-477554784986`
+- `state_bucket_arn` = `arn:aws:s3:::ascos-dev-tfstate-477554784986`
+- `state_bucket_region` = `ap-south-1`
+
+Bucket is versioned, AES256-encrypted, has Block Public Access fully enabled,
+and denies any non-TLS access via bucket policy. `prevent_destroy` is set
+in the resource lifecycle as a guardrail against accidental deletion.
+
+**Note on credentials:** No access keys, session tokens, or credential
+exports are recorded in this document — only profile names and the
+authentication method. Session credentials are short-lived by design.
+
+**What's next:** Bootstrap is complete. The next step is configuring the
+root `terraform/backend.hcl` to point at this bucket, then running
+`terraform init` in the root `terraform/` config to migrate onto the S3
+remote backend.
 

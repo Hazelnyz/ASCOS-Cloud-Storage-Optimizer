@@ -1,0 +1,11 @@
+# Copy this file to terraform.tfvars and fill in your own values.
+# terraform.tfvars is NOT committed to git (see .gitignore) — but note
+# none of these values are secrets, they're just project configuration.
+
+project_name = "ascos"
+environment  = "dev"
+aws_region   = "ap-south-1"
+
+# Must be globally unique. Your AWS account ID is a safe, easy choice:
+#   aws sts get-caller-identity --query Account --output text
+state_bucket_suffix = "REPLACE_WITH_YOUR_AWS_ACCOUNT_ID"

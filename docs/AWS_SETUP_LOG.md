@@ -216,7 +216,7 @@ instead of a text editor.
 
 
 
-edit:
+<!-- edit pass 2: added terraform bootstrap completion section -->
 ## 7. Terraform bootstrap completed
 
 **What happened:** Terraform v1.15.9 was installed and initialized in

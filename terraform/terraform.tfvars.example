@@ -1,0 +1,7 @@
+# Copy this file to terraform.tfvars.
+# Non-secret project configuration only — never put credentials
+# or AWS secrets in this file (master reference §31).
+
+project_name = "ascos"
+environment  = "dev"
+aws_region   = "ap-south-1"

@@ -1,1 +1,8 @@
 1NPDPRO5.DOC
+
+# Terraform local/backend files
+terraform/backend.hcl
+terraform/terraform.tfvars
+terraform/.terraform/
+terraform/terraform.tfstate
+terraform/terraform.tfstate.*

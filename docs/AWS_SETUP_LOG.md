@@ -292,3 +292,22 @@ Terraform now manages IAM identities for the project infrastructure team.
 - No console passwords or access keys were generated
 - Lambda execution roles remain deferred to the compute stage
 - `PowerUserAccess` was chosen as a reversible starting permission level; it can be widened later if required.
+
+## 10. Cognito application identity configured
+
+Cognito application identity infrastructure was created and applied successfully.
+
+- Cognito User Pool `ascos-dev-users` was created.
+- Web App Client `ascos-dev-web-client` was created.
+- Email is the sign-in identifier.
+- Cognito `sub` is the stable application `user_id`.
+- A mutable, optional, non-unique `custom:display_name` attribute was added for UI/profile use, limited to 1–50 characters.
+- The web client is public with `generate_secret = false`.
+- Authentication uses the Cognito SDK with SRP; Hosted UI/OAuth is not used.
+- MFA is intentionally `OFF` for Stage 2.
+- MFA is deferred until the security system can support mandatory enrollment and step-up MFA only for suspicious activity, with higher-threat escalation to a 12-hour account lock and administrator notification.
+- Cognito Advanced Security is intentionally not enabled.
+- Lazy provisioning is used; no PostConfirmation Lambda trigger is configured at this stage.
+- PostConfirmation provisioning can be reconsidered once the DynamoDB and Lambda stages are implemented.
+- Terraform plan: **2 to add, 0 to change, 0 to destroy**.
+- Terraform apply: **2 added, 0 changed, 0 destroyed**.

@@ -271,3 +271,24 @@ root `terraform/backend.hcl` to point at this bucket, then running
 `terraform init` in the root `terraform/` config to migrate onto the S3
 remote backend.
 
+## 8. Root Terraform remote backend configured
+
+The root Terraform configuration was added to the repository and connected
+to the bootstrap S3 state bucket.
+
+- S3 backend: `ascos-dev-tfstate-477554784986`
+- State key: `ascos/dev/terraform.tfstate`
+- S3-native locking enabled with `use_lockfile = true`
+- Root `terraform init` completed successfully.
+- Root `terraform plan` returned **no changes**.
+
+## 9. Infrastructure manager IAM configured
+
+Terraform now manages IAM identities for the project infrastructure team.
+
+- Created IAM users: `nikhita` and `rukkshana`
+- Attached `PowerUserAccess` to both users
+- `vandana-admin` remains manually managed and was not modified
+- No console passwords or access keys were generated
+- Lambda execution roles remain deferred to the compute stage
+- `PowerUserAccess` was chosen as a reversible starting permission level; it can be widened later if required.

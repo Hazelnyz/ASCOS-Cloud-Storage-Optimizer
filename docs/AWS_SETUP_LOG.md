@@ -311,3 +311,19 @@ Cognito application identity infrastructure was created and applied successfully
 - PostConfirmation provisioning can be reconsidered once the DynamoDB and Lambda stages are implemented.
 - Terraform plan: **2 to add, 0 to change, 0 to destroy**.
 - Terraform apply: **2 added, 0 changed, 0 destroyed**.
+
+## 11. Primary S3 storage design decided
+
+The ASCOS primary application storage design was defined for Stage 3.
+
+- Amazon S3 is the primary store for user-uploaded files.
+- Files use the Cognito `sub` value as the stable application `user_id`.
+- Per-user storage follows the convention `s3://<bucket>/{user_id}/...`.
+- Hot storage maps to **S3 Standard**.
+- Warm storage maps to **S3 Standard-IA**.
+- Cold storage maps to **S3 Glacier Instant Retrieval**.
+- S3 Block Public Access and server-side encryption will be enabled.
+- Bucket versioning will be enabled.
+- Lifecycle rules are limited to housekeeping and are not responsible for deciding Hot/Warm/Cold placement.
+- ML-driven tier decisions will be handled by the future ASCOS optimization system rather than competing S3 lifecycle transitions.
+- The actual S3 bucket infrastructure will be implemented and verified separately as part of Stage 3.

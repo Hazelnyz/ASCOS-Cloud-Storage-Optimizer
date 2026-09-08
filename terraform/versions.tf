@@ -37,6 +37,6 @@ terraform {
 }
 
 provider "aws" {
-  profile = "ascos-terraform"
-  region = var.aws_region
+  profile = "ascos-login"
+  region  = var.aws_region
 }

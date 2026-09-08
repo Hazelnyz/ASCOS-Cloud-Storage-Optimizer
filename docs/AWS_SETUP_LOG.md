@@ -326,3 +326,32 @@ The ASCOS primary application storage design was defined for Stage 3.
 - Bucket versioning will be enabled.
 - Lifecycle rules are limited to housekeeping and are not responsible for deciding Hot/Warm/Cold placement.
 - ML-driven tier decisions will be handled by the future ASCOS optimization system rather than competing S3 lifecycle transitions.
+
+## 12. Terraform AWS authentication updated
+
+Terraform was switched from the expiring `ascos-terraform` OAuth/credential-process chain to the `ascos-login` profile using IAM access-key authentication.
+
+- `terraform/versions.tf` now uses `profile = "ascos-login"`.
+- The access key was tested successfully with `aws sts get-caller-identity`.
+- Terraform subsequently authenticated successfully and accessed the remote S3 state.
+- The previous `ascos-terraform` credential-process indirection is no longer used by the main Terraform provider.
+- Access-key credentials are stored locally and are not committed to the repository.
+
+## 13. DynamoDB data layer implemented
+
+The ASCOS Stage 4 data layer was implemented as six separate DynamoDB tables, with keys derived from their required application, ML, and security access patterns:
+
+| Table | Primary design | Purpose |
+|---|---|---|
+| `access_event` | `user_id` / `timestamp#event_id` + `user-file-index` GSI | Append-only access history and per-user/per-file ML features |
+| `user_baseline` | `user_id` | Current per-user anomaly baseline and absolute activity counts |
+| `protected_files` | `user_id` / `file_id` | Explicit user protection; row existence means protected |
+| `predictions` | `prediction_id` + `user-file-index` + `user-index` GSIs | ML predictions, explanations, and recent user predictions |
+| `feedback` | `feedback_event_id` + `prediction-index` GSI | Prediction feedback history and bandit context |
+| `security_state` | `user_id` | Current per-user anomaly containment state |
+
+- All six tables use **PAY_PER_REQUEST** billing for the project's small, variable initial workload.
+- GSIs are limited to named operational access patterns; speculative and batch-analytics indexes are intentionally excluded.
+- `co_access_signal` is computed from the user's chronological `access_event` stream rather than using a dedicated GSI unless later evaluation justifies one.
+- `protected_files` blocks automated tier changes/bandit execution but does **not** stop access logging or ML observation/prediction.
+- The tables provide the durable data foundation for later Lambda, ML, feedback, and security components; those processing components are not implemented by DynamoDB itself.

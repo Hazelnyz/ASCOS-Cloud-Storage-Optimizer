@@ -355,3 +355,38 @@ The ASCOS Stage 4 data layer was implemented as six separate DynamoDB tables, wi
 - `co_access_signal` is computed from the user's chronological `access_event` stream rather than using a dedicated GSI unless later evaluation justifies one.
 - `protected_files` blocks automated tier changes/bandit execution but does **not** stop access logging or ML observation/prediction.
 - The tables provide the durable data foundation for later Lambda, ML, feedback, and security components; those processing components are not implemented by DynamoDB itself.
+
+## 14. Lambda compute layer implemented
+
+The ASCOS Stage 5 compute layer was deployed as six independently managed
+AWS Lambda functions, each with its own IAM execution role and CloudWatch
+log group:
+
+- `tier-change-fn`, `forecast-fn`, `prediction-fn`, `anomaly-scorer-fn`,
+  `feedback-writer-fn`, `training-orchestrator-fn`
+- All use Python 3.12 and 14-day CloudWatch log retention.
+- Deployment packages are generated with the `hashicorp/archive` provider;
+  generated `handler.zip` files are excluded from Git.
+- IAM follows least privilege. `tier-change-fn` has S3 tier-change access and
+  the `protected_files` hard-gate check; `anomaly-scorer-fn` has
+  `security_state` read/write access; `feedback-writer-fn` has `feedback`
+  `PutItem` access. The remaining functions have logging access only until
+  their later data/ML/orchestration dependencies are implemented.
+- No PostConfirmation trigger was added; lazy provisioning remains the
+  chosen approach.
+- Heavy training remains outside Lambda; `training-orchestrator-fn` will
+  later coordinate the EC2/Fargate training workflow.
+
+**Verification:**
+
+- `terraform validate` passed.
+- Terraform created **24 resources**: 6 Lambda functions, 6 IAM roles,
+  6 IAM policies, and 6 CloudWatch log groups.
+- Apply completed with **24 added, 0 changed, 0 destroyed**.
+- A real `tier-change-fn` invocation returned **StatusCode 200** with the
+  expected `stage5_scaffold` response.
+
+**Result:** Stage 5 compute infrastructure is deployed and verified.
+Event wiring, tier-change execution, ML inference, anomaly scoring,
+feedback processing, and training orchestration remain deferred to later
+stages.

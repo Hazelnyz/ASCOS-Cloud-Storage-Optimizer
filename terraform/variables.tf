@@ -22,3 +22,9 @@ variable "aws_region" {
   type        = string
   default     = "ap-south-1"
 }
+
+variable "frontend_origin" {
+  description = "Allowed frontend origin for API Gateway CORS (Stage 6). Development default until Stage 9 sets the real deployed frontend URL."
+  type        = string
+  default     = "http://localhost:3000"
+}

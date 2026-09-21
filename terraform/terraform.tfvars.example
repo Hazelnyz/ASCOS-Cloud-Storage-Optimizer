@@ -5,3 +5,4 @@
 project_name = "ascos"
 environment  = "dev"
 aws_region   = "ap-south-1"
+alert_email  = "you@example.com"

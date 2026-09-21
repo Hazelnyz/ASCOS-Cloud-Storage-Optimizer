@@ -28,3 +28,9 @@ variable "frontend_origin" {
   type        = string
   default     = "http://localhost:3000"
 }
+
+variable "alert_email" {
+  description = "Email address to receive Stage 7 admin security/error alerts (SNS subscription). No default — must be supplied via terraform.tfvars (gitignored, never committed)."
+  type        = string
+  sensitive   = true
+}

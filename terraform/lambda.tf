@@ -152,46 +152,12 @@ resource "aws_iam_role_policy" "tier_change_fn" {
           "s3:AbortMultipartUpload",
           "s3:ListMultipartUploadParts",
         ]
-        # s3:GetObject + s3:PutObject are the officially documented
-        # requirement for CopyObject (source read + destination
-        # write) per AWS's CopyObject API reference, and s3:PutObject
-        # also covers the entire multipart chain (CreateMultipartUpload,
-        # UploadPartCopy, CompleteMultipartUpload all map to
-        # s3:PutObject per AWS's own IAM action-equivalence mapping)
-        # — this is what §16's multipart-copy flow requires.
-        # s3:AbortMultipartUpload and s3:ListMultipartUploadParts are
-        # separately-named actions for the cleanup/listing operations
-        # in that same flow.
-        #
-        # s3:RestoreObject and s3:CopyObject are deliberately NOT
-        # included. s3:CopyObject is not documented as a required
-        # IAM action for the CopyObject operation (Get+Put covers
-        # it). s3:RestoreObject is not applicable at all: it's only
-        # relevant to Glacier Flexible Retrieval / Deep Archive,
-        # which ASCOS explicitly does NOT use for its Cold tier —
-        # Glacier Instant Retrieval requires no restore step
-        # (confirmed via AWS re:Post: "The Amazon S3 Glacier Instant
-        # Retrieval storage class doesn't require to restore
-        # objects"). Carrying restore-related permissions forward
-        # from general S3 Glacier documentation, without checking
-        # they apply to the specific class this project uses, would
-        # have been exactly the kind of unjustified permission this
-        # file is trying to avoid.
-        #
-        # Scoped to objects within the app bucket only — this is
-        # the application's entire object namespace (per-user
-        # prefixes, §7, are enforced at the object-key level by
-        # this function's own authorization logic at runtime, not
-        # by a Terraform-expressible IAM condition here).
         Resource = "${aws_s3_bucket.app_storage.arn}/*"
       },
       {
-        Sid    = "S3ListInProgressMultipartUploads"
-        Effect = "Allow"
-        Action = ["s3:ListBucketMultipartUploads"]
-        # Bucket-level action (distinct from the object-level
-        # s3:ListMultipartUploadParts above) — required to list
-        # in-progress multipart uploads on the bucket itself.
+        Sid      = "S3ListInProgressMultipartUploads"
+        Effect   = "Allow"
+        Action   = ["s3:ListBucketMultipartUploads"]
         Resource = aws_s3_bucket.app_storage.arn
       },
       {
@@ -443,6 +409,12 @@ resource "aws_lambda_function" "prediction_fn" {
 #   Isolation Forest scoring logic (ML schema §7) that would read
 #   those tables doesn't exist until the security/anomaly-detection
 #   implementation stage.
+#
+# STAGE 7.6 ADDITION: sns:Publish on admin_alerts (sns.tf), and the
+#   corresponding SNS_TOPIC_ARN env var below. This makes the
+#   handler's dormant _publish_alert path (Stage 7.4) functional
+#   IF Stage 10 ever activates it — the Stage 7 handler itself never
+#   calls it, so this permission sits unused today by design.
 ############################################################
 
 data "archive_file" "anomaly_scorer_fn" {
@@ -473,6 +445,7 @@ resource "aws_iam_role" "anomaly_scorer_fn" {
   }
 }
 
+# --- CHANGED: added the PublishAdminAlerts statement below ---
 resource "aws_iam_role_policy" "anomaly_scorer_fn" {
   name = "anomaly-scorer-fn-policy"
   role = aws_iam_role.anomaly_scorer_fn.id
@@ -489,6 +462,12 @@ resource "aws_iam_role_policy" "anomaly_scorer_fn" {
           "dynamodb:DeleteItem",
         ]
         Resource = aws_dynamodb_table.security_state.arn
+      },
+      {
+        Sid      = "PublishAdminAlerts"
+        Effect   = "Allow"
+        Action   = ["sns:Publish"]
+        Resource = aws_sns_topic.admin_alerts.arn
       },
       {
         Sid      = "LogGroupCreation"
@@ -509,6 +488,7 @@ resource "aws_iam_role_policy" "anomaly_scorer_fn" {
   })
 }
 
+# --- CHANGED: added SNS_TOPIC_ARN below ---
 resource "aws_lambda_function" "anomaly_scorer_fn" {
   function_name    = "${var.project_name}-${var.environment}-anomaly-scorer-fn"
   filename         = data.archive_file.anomaly_scorer_fn.output_path
@@ -524,6 +504,7 @@ resource "aws_lambda_function" "anomaly_scorer_fn" {
       ENVIRONMENT          = var.environment
       PROJECT_NAME         = var.project_name
       SECURITY_STATE_TABLE = aws_dynamodb_table.security_state.name
+      SNS_TOPIC_ARN        = aws_sns_topic.admin_alerts.arn
     }
   }
 

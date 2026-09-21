@@ -7,3 +7,5 @@ terraform/.terraform/
 terraform/terraform.tfstate
 terraform/terraform.tfstate.*
 backend/**/handler.zip
+*.tfplan
+livetest*.txt

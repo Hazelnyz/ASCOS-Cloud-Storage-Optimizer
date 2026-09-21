@@ -390,3 +390,21 @@ log group:
 Event wiring, tier-change execution, ML inference, anomaly scoring,
 feedback processing, and training orchestration remain deferred to later
 stages.
+
+15. API layer implemented
+
+The ASCOS Stage 6 API layer was deployed as an HTTP API on Amazon API Gateway, providing authenticated frontend access to file operations, tier management, and feedback.
+
+Type: HTTP API with a native Cognito JWT authorizer validating access tokens.
+API: ascos-dev-api — https://1izjgntfv4.execute-api.ap-south-1.amazonaws.com
+10 JWT-protected routes cover file listing, upload/download/share URLs, metadata, deletion, tier forecast/change, Frequently Used, and feedback.
+Added 7 new Lambda functions with real business logic: file-list-fn, file-upload-url-fn, file-download-url-fn, file-metadata-fn, file-delete-fn, file-share-fn, and frequently-used-fn.
+Existing Stage 5 forecast-fn, tier-change-fn, and feedback-writer-fn are exposed through the API but remain scaffold responses until their later implementation stages.
+All user identity is derived from the validated Cognito JWT sub claim; client-supplied user IDs are not trusted.
+S3 keys use {user_id}/{file_id}, with the original filename stored as object metadata. CORS and API access logging were also configured.
+IAM follows least privilege. Implementation testing also fixed the file-delete-fn HeadObject permission gap and the Decimal JSON serialization issue in frequently-used-fn.
+Verification: Terraform validation succeeded, 14/14 local moto tests passed, and a live unauthenticated GET /files returned 401 Unauthorized, confirming the deployed route and Cognito JWT protection.
+A later Stage 7 pollution check confirmed the relevant Stage 6 handlers use HeadObject rather than GetObject for internal checks, preventing unwanted access-event pollution.
+Full authenticated functional testing of all 10 routes, including real cross-user isolation, remains deferred to Stage 11.
+
+Result: Stage 6 API infrastructure is deployed and live JWT protection is verified. Full end-to-end API functionality remains part of the final validation stage.

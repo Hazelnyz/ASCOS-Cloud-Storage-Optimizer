@@ -427,3 +427,22 @@ Stage 7 changes were organized into six logical Git commits; the working tree is
 Real anomaly detection, security-state enforcement, authentication-event telemetry, and full authenticated API testing remain deferred to later stages.
 
 Result: Stage 7 eventing, monitoring, and security infrastructure is deployed and live-event verified.
+
+17. Terraform frontend outputs implemented
+
+The ASCOS Stage 8 Terraform outputs were added to expose the values required for frontend integration without creating any new AWS infrastructure.
+
+Added the application S3 bucket name as a Terraform output.
+Added the API Gateway HTTP API endpoint.
+Added the Cognito User Pool ID.
+Added the Cognito App Client ID for the web client.
+Added the AWS region.
+These values are non-secret frontend configuration values; backend-internal resources such as DynamoDB tables, Lambda names, and the Terraform state bucket remain excluded.
+Terraform formatting and validation completed successfully.
+The Stage 8 plan contained 0 resources to add, 0 to change, and 0 to destroy.
+Terraform apply completed with 0 resources added, 0 changed, and 0 destroyed, saving the five outputs to Terraform state.
+The generated Terraform plan file remains excluded from Git.
+Stage 8 changes were committed and pushed to the main branch as d5910a9 (infra: expose frontend-facing terraform outputs).
+Frontend hosting, hosting URL, S3 CORS configuration, the production frontend_origin, and Amplify GitHub authentication remain deferred to Stage 9.
+
+Result: Stage 8 frontend-facing Terraform configuration is complete, with all five required outputs available from Terraform state and no infrastructure changes introduced.

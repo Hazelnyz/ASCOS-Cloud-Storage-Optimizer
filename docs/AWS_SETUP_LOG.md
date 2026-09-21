@@ -408,3 +408,22 @@ A later Stage 7 pollution check confirmed the relevant Stage 6 handlers use Head
 Full authenticated functional testing of all 10 routes, including real cross-user isolation, remains deferred to Stage 11.
 
 Result: Stage 6 API infrastructure is deployed and live JWT protection is verified. Full end-to-end API functionality remains part of the final validation stage.
+
+16. Eventing, monitoring, and security layer implemented
+
+The ASCOS Stage 7 eventing and monitoring layer was deployed to capture S3 activity, record access events, and provide security/error monitoring.
+
+CloudTrail records S3 data events for the application bucket, with EventBridge routing GetObject, PutObject, and DeleteObject events.
+access-event-writer-fn converts these CloudTrail events into the DynamoDB access_event table using CloudTrail event IDs for idempotency.
+anomaly-scorer-fn currently operates as a Stage 7 logging stub; real anomaly detection remains deferred to Stage 10.
+Added an SQS dead-letter queue for failed access-event writer invocations.
+Added SNS administrator alerts and CloudWatch alarms for Lambda errors and DLQ activity.
+EventBridge intentionally excludes tier-management operations such as CopyObject, RestoreObject, and UploadPartCopy from access-event processing.
+Terraform deployment completed successfully after resolving post-create verification issues.
+Live verification: PutObject → write, GetObject → download, and DeleteObject → delete events were successfully observed in Lambda logs and access_event.
+Live verification also confirmed the EventBridge pattern using source: "aws.s3", resolving the remaining event-source design question for this stage.
+The SNS administrator alert subscription was confirmed successfully.
+Stage 7 changes were organized into six logical Git commits; the working tree is clean.
+Real anomaly detection, security-state enforcement, authentication-event telemetry, and full authenticated API testing remain deferred to later stages.
+
+Result: Stage 7 eventing, monitoring, and security infrastructure is deployed and live-event verified.

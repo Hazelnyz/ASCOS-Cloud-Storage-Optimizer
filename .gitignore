@@ -1,0 +1,50 @@
+1NPDPRO5.DOC
+
+# Python virtual environments and caches
+.venv/
+venv/
+ENV/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+.cache/
+
+# Node / Vite / Frontend
+node_modules/
+frontend/node_modules/
+frontend/dist/
+dist/
+.vite/
+*.tsbuildinfo
+
+# Env files (any folder)
+.env
+.env.*
+!.env.example
+
+# Terraform (any folder)
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+*.tfplan
+terraform/tfplan
+!*.hcl.example
+**/backend.hcl
+terraform/*.txt
+terraform/payload.json
+
+# Build zips & test outputs
+backend/**/handler.zip
+ml-worker-release.zip
+livetest*.txt
+sample-getobject-event.json
+
+# OS files
+.DS_Store
+Thumbs.db

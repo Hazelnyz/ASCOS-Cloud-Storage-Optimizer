@@ -1,0 +1,97 @@
+{
+  "model_version": "ascos-lgbm-demo-20260924T100028Z-seed42",
+  "seed": 42,
+  "trained_at_utc": "2026-09-24T10:00:28.397174+00:00",
+  "python_version": "3.10.11",
+  "lightgbm_version": "4.7.0",
+  "feature_columns": [
+    "file_age_days",
+    "days_since_last_access",
+    "never_accessed",
+    "access_hour_sin",
+    "access_hour_cos",
+    "last_access_day_of_week",
+    "access_hour_consistency",
+    "access_count_7d",
+    "access_count_30d",
+    "access_count_90d",
+    "access_count_all_time",
+    "recent_access_ratio",
+    "access_acceleration",
+    "user_avg_daily_accesses",
+    "co_access_signal",
+    "share_count_30d",
+    "file_type",
+    "file_size_bucket",
+    "directory_category",
+    "current_storage_tier"
+  ],
+  "categorical_columns": [
+    "last_access_day_of_week",
+    "file_type",
+    "file_size_bucket",
+    "directory_category",
+    "current_storage_tier"
+  ],
+  "train_rows": 5191,
+  "test_rows": 3088,
+  "dropped_embargo_rows": 472,
+  "train_positive": 2787,
+  "train_negative": 2404,
+  "test_positive": 1476,
+  "test_negative": 1612,
+  "scale_pos_weight": 0.8625762468604234,
+  "lgbm_params": {
+    "objective": "binary",
+    "random_state": 42,
+    "n_estimators": 300,
+    "learning_rate": 0.05,
+    "num_leaves": 31,
+    "scale_pos_weight": 0.8625762468604234,
+    "verbosity": -1
+  },
+  "split_date": "2026-06-06",
+  "train_cutoff": "2026-05-30",
+  "horizon_days": 7,
+  "embargo_days": 7,
+  "cadence_days": 3,
+  "train_frac": 0.75,
+  "data_source": "synthetic_demo_data",
+  "categorical_category_maps": {
+    "last_access_day_of_week": [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday"
+    ],
+    "file_type": [
+      "csv",
+      "docx",
+      "mp4",
+      "pdf",
+      "png",
+      "pptx",
+      "txt",
+      "xlsx"
+    ],
+    "file_size_bucket": [
+      "large",
+      "medium",
+      "small"
+    ],
+    "directory_category": [
+      "archive",
+      "personal",
+      "project_a",
+      "project_b",
+      "shared"
+    ],
+    "current_storage_tier": [
+      "HOT"
+    ]
+  },
+  "feature_schema_version": "v1"
+}

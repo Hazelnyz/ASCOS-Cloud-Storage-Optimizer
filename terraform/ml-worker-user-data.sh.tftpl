@@ -1,0 +1,51 @@
+#!/bin/bash
+set -euo pipefail
+
+dnf install -y python3.11 python3.11-pip libgomp awscli-2 unzip
+useradd --system --home-dir /opt/ascos-ml-worker --shell /sbin/nologin mlworker || true
+mkdir -p /opt/ascos-ml-worker
+aws s3 cp "s3://${artifact_bucket}/${artifact_key}" /tmp/ml-worker-release.zip --region "${aws_region}"
+unzip -oq /tmp/ml-worker-release.zip -d /opt/ascos-ml-worker
+python3.11 -m venv /opt/ascos-ml-worker/.venv
+/opt/ascos-ml-worker/.venv/bin/python -m pip install --requirement /opt/ascos-ml-worker/ml/worker/requirements.txt
+chown -R mlworker:mlworker /opt/ascos-ml-worker
+
+cat > /etc/systemd/system/ascos-ml-worker.service <<'UNIT'
+[Unit]
+Description=ASCOS SQS ML inference worker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mlworker
+Group=mlworker
+WorkingDirectory=/opt/ascos-ml-worker
+Environment=AWS_REGION=${aws_region}
+Environment=AWS_DEFAULT_REGION=${aws_region}
+Environment=SQS_QUEUE_URL=${queue_url}
+Environment=SQS_VISIBILITY_TIMEOUT_SECONDS=${visibility_timeout}
+Environment=S3_BUCKET_NAME=${app_bucket}
+Environment=ACCESS_EVENT_TABLE=${access_event_table}
+Environment=PROTECTED_FILES_TABLE=${protected_files_table}
+Environment=USER_BASELINE_TABLE=${user_baseline_table}
+Environment=PREDICTIONS_TABLE=${predictions_table}
+Environment=MODEL_VERSION=${model_version}
+Environment=PYTHONPATH=/opt/ascos-ml-worker
+ExecStart=/opt/ascos-ml-worker/.venv/bin/python -m ml.worker.worker
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=60
+KillSignal=SIGTERM
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/ascos-ml-worker
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+
+systemctl daemon-reload
+systemctl enable --now ascos-ml-worker.service

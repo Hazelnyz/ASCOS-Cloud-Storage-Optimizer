@@ -1,0 +1,10 @@
+# Copy this file to backend.hcl and fill in the values from
+# `terraform output` in the bootstrap/ folder (see README.md).
+# backend.hcl is gitignored — do not commit it with real values
+# if you consider bucket names sensitive in your setup.
+
+bucket       = "REPLACE_WITH_state_bucket_name_OUTPUT_FROM_BOOTSTRAP"
+key          = "ascos/dev/terraform.tfstate"
+region       = "ap-south-1"
+encrypt      = true
+use_lockfile = true
